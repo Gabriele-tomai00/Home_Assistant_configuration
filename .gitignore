@@ -14,3 +14,10 @@ tts/
 /tts
 /themes
 custom_components/
+secrets.yaml
+*.db*
+*.log
+home-assistant.log*
+/www
+/image
+/esphome
