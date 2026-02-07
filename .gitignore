@@ -21,3 +21,4 @@ home-assistant.log*
 /www
 /image
 /esphome
+.ha_run.lock

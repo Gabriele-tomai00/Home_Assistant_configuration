@@ -1,0 +1,13 @@
+psa:
+  name: PSA
+  mac:
+  icon:
+  picture:
+  track: true
+
+car_corsa:
+  name: car_corsa
+  mac:
+  icon:
+  picture:
+  track: true

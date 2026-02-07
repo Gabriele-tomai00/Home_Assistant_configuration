@@ -1,0 +1,186 @@
+##################################################################################
+#                OPEL CORSA / PSA Integration Package
+##################################################################################
+
+template:
+  - sensor:
+      # - name: PSA Charging Status
+      #   unique_id: psa_charging_status
+      #   state: >-
+      #     {{ state_attr('sensor.car_corsa', 'energy')[0]['charging']['status'] if state_attr('sensor.car_corsa', 'energy') else 'Sconosciuto' }}
+
+      # - name: PSA Battery Level
+      #   unique_id: psa_battery_level
+      #   state: >-
+      #     {% set energy = state_attr('sensor.car_corsa', 'energy') %}
+      #     {{ energy[0]['level'] if energy and energy|length > 0 else 0 }}
+      #   unit_of_measurement: "%"
+      #   device_class: battery
+
+      # - name: PSA Range
+      #   unique_id: psa_range
+      #   state: "{{ state_attr('sensor.car_corsa', 'energy')[0].autonomy }}"
+      #   unit_of_measurement: "km"
+      #   icon: mdi:map-marker-distance
+      #   device_class: distance
+      #   state_class: measurement
+
+      # - name: PSA Mileage
+      #   unique_id: psa_mileage
+      #   state: "{{ state_attr('sensor.car_corsa', 'timed_odometer').mileage }}"
+      #   unit_of_measurement: "km"
+      #   icon: mdi:road-variant
+      #   device_class: distance
+      #   state_class: total_increasing
+
+      # - name: PSA Preconditioning Status
+      #   unique_id: psa_preconditioning_status
+      #   state: >-
+      #     {% set pre = state_attr('sensor.car_corsa', 'preconditioning') %}
+      #     {{ pre.air_conditioning.status if pre and pre.air_conditioning is defined else 'unknown' }}
+
+      # - name: PSA Charging Mode
+      #   unique_id: psa_charging_mode
+      #   state: "{{ state_attr('sensor.car_corsa', 'energy')[0].charging.charging_mode }}"
+      #   icon: mdi:lightning-bolt
+
+      # - name: PSA Charge Rate
+      #   unique_id: psa_charge_rate
+      #   state: "{{ state_attr('sensor.car_corsa', 'energy')[0].charging.charging_rate }}"
+      #   unit_of_measurement: "mph"
+      #   icon: mdi:speedometer
+      #   device_class: wind_speed
+      #   state_class: measurement
+
+      # - name: PSA Next Stop Time
+      #   unique_id: psa_stop_hour
+      #   state: "{{ state_attr('sensor.car_corsa_charge_control', '_next_stop_hour') }}"
+
+      # - name: PSA Charge Threshold
+      #   unique_id: psa_charge_threshold
+      #   state: >-
+      #     {% set threshold = state_attr('sensor.car_corsa_charge_control', 'percentage_threshold') %}
+      #     {{ 100 if (threshold is none or threshold == 'Unknown') else threshold }}
+      #   unit_of_measurement: "%"
+      #   state_class: measurement
+
+      # - name: Car Corsa Energy Level
+      #   unique_id: car_corsa_energy_level
+      #   state: >-
+      #     {% set percentuale = state_attr('sensor.car_corsa', 'energy')[0]['level']|float %}
+      #     {% if percentuale >= 99 and states('sensor.prism_potenza')|float <= 0.1 %}
+      #       100
+      #     {% else %}
+      #       {{ percentuale|round }}
+      #     {% endif %}
+      #   unit_of_measurement: "%"
+      #   icon: mdi:car-battery
+
+      # - name: Car Corsa Energy Autonomy
+      #   unique_id: car_corsa_energy_autonomy
+      #   state: '{{ state_attr("sensor.car_corsa", "energy")[0]["autonomy"] }}'
+      #   unit_of_measurement: "km"
+      #   icon: mdi:road-variant
+
+      # - name: Car Corsa Mileage
+      #   unique_id: car_corsa_mileage
+      #   state: '{{ state_attr("sensor.car_corsa", "timed_odometer")["mileage"] }}'
+      #   unit_of_measurement: "km"
+      #   icon: mdi:sign-direction
+
+      # - name: Car Corsa Battery Voltage
+      #   unique_id: car_corsa_battery_voltage
+      #   state: '{{ state_attr("sensor.car_corsa", "battery")["voltage"] * 4 }}'
+      #   unit_of_measurement: "V"
+
+      # - name: Car Corsa Is Charging
+      #   unique_id: car_corsa_is_charging
+      #   state: >-
+      #     {{ 1 if state_attr('sensor.car_corsa', 'energy')[0]['charging']['status'] == 'InProgress' else 0 }}
+
+      # - name: Car Corsa Environment Temperature
+      #   unique_id: car_corsa_environment_temperature
+      #   state: "{{ state_attr('sensor.car_corsa', 'environment')['air']['temp'] | default(0) }}"
+      #   unit_of_measurement: "C"
+
+      # - name: Car Corsa Latitude
+      #   unique_id: car_corsa_latitude
+      #   state: '{{ state_attr("sensor.car_corsa", "last_position")["geometry"]["coordinates"][1] }}'
+
+      # - name: Car Corsa Longitude
+      #   unique_id: car_corsa_longitude
+      #   state: '{{ state_attr("sensor.car_corsa", "last_position")["geometry"]["coordinates"][0] }}'
+
+      # - name: Car Corsa Height
+      #   unique_id: car_corsa_hight
+      #   state: '{{ state_attr("sensor.car_corsa", "last_position")["geometry"]["coordinates"][2] }}'
+
+      # - name: Car Corsa Height
+      #   unique_id: car_corsa_hight
+      #   state: '{{ state_attr("sensor.car_corsa", "last_position")["geometry"]["coordinates"][2] }}'
+
+      ##################################################################################
+      #                    ABRP / BATTERY ESTIMATION / CONSUMPTION
+      ##################################################################################
+      # ABRP JSON
+      # - name: Car Corsa JSON ABRP
+      #   unique_id: car_corsa_json_abrp
+      #   state: >-
+      #     {{
+      #       {
+      #         "utc": states('sensor.car_corsa_timestamp') | int,
+      #         "soc": states('sensor.car_corsa_energy_level') | float,
+      #         "soh": states('sensor.car_corsa_soh') | float,
+      #         "speed": 0,
+      #         "lat": states('sensor.car_corsa_latitude') | float,
+      #         "lon": states('sensor.car_corsa_longitude') | float,
+      #         "elevation": states('sensor.car_corsa_hight') | int,
+      #         "is_charging": states('sensor.car_corsa_is_charging') | int,
+      #         "power": 0,
+      #         "ext_temp": states('sensor.car_corsa_environment_temperature') | int,
+      #         "car_model": "opel:corsae:20:50",
+      #         "current": states('sensor.car_corsa_battery_current') | float,
+      #         "voltage": states('sensor.car_corsa_battery_voltage') | int
+      #       } | tojson
+      #     }}
+
+      - name: "Ultimo aggiornamento auto in minuti"
+        unique_id: last_update_opel_battery_minutes
+        unit_of_measurement: "min"
+        icon: mdi:update
+        state: >
+          {% set last = states.sensor.opel_corsa_batteria.last_changed %}
+          {{ ((now() - last).total_seconds() / 60) | round(1) }}
+
+      - name: "Ultimo aggiornamento auto"
+        unique_id: last_update_opel_battery
+        icon: mdi:update
+        state: >-
+          {% set last = states.sensor.opel_corsa_batteria.last_changed %}
+          {% if last is none %}
+            unknown
+          {% else %}
+            {% set diff = (now() - last).total_seconds() %}
+            {% if diff < 60 %}
+              pochi secondi fa
+            {% elif diff < 3600 %}
+              {% set minuti = (diff / 60) | int %}
+              {{ minuti }} minut{{ 'i' if minuti > 1 else 'o' }} fa
+            {% elif diff < 86400 %}
+              {% set ore = (diff // 3600) | int %}
+              {% set minuti = ((diff % 3600) / 60) | int %}
+              {% if minuti > 0 %}
+                {{ ore }} or{{ 'a' if ore == 1 else 'e' }} e {{ minuti }} minut{{ 'i' if minuti > 1 else 'o' }} fa
+              {% else %}
+                {{ ore }} or{{ 'a' if ore == 1 else 'e' }} fa
+              {% endif %}
+            {% else %}
+              {% set giorni = (diff // 86400) | int %}
+              {% set ore = ((diff % 86400) // 3600) | int %}
+              {% if ore > 0 %}
+                {{ giorni }} giorn{{ 'i' if giorni > 1 else 'o' }} e {{ ore }} or{{ 'e' if ore > 1 else 'a' }} fa
+              {% else %}
+                {{ giorni }} giorn{{ 'i' if giorni > 1 else 'o' }} fa
+              {% endif %}
+            {% endif %}
+          {% endif %}

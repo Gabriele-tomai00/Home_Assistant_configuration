@@ -1,0 +1,46 @@
+#Cambia icona e colore icona del sensore che indica lo stato della wallbox
+sensor.prism_stato:
+  templates:
+    icon_color: >
+      if (state === 'Scollegata') return 'rgb(0,0,255)';
+      if (state === 'In attesa') return 'rgb(138,43,226)';
+      if (state === 'In carica') return 'rgb(0,255,0)';
+      if (state === 'In pausa') return 'rgb(255,255,0)';
+      else return 'rgb(255,0,0)';
+    background_color: "trasparent"
+    icon: >
+      if (state === 'Scollegata') return 'mdi:power-plug-off';
+      if (state === 'In attesa') return 'mdi:car-settings';
+      if (state === 'In carica') return 'mdi:car-electric';
+      if (state === 'In pausa') return 'mdi:pause-octagon';
+      else return 'mdi:alert-octagon';
+
+#Cambia il colore dell'icona della modalità attivata
+input_boolean.prism_normal_mode:
+  templates:
+    icon_color: >
+      if (state === 'on') return 'rgb(0,255,0)';
+
+input_boolean.prism_solar_mode:
+  templates:
+    icon_color: >
+      if (state === 'on') return 'rgb(255,255,0)';
+
+input_boolean.prism_pause_mode:
+  templates:
+    icon_color: >
+      if (state === 'on') return 'rgb(255,140,0)';
+
+#Cambia icona e colore icona del sensore che indica se la wallbox si è messa automaticamente in modalità pausa per limitare la corrente
+sensor.prism_autolimit:
+  friendly_name: "Autolimit"
+  templates:
+    icon_color: >
+      if (state === 'Attivo') return 'rgb(255,0,0)';
+      else return 'rgb(0,255,0)';
+    icon: >
+      if (state === 'Attivo') return 'mdi:boom-gate';
+      else return 'mdi:hand-okay';
+
+switch.car_corsa_climatizzazione:
+  assumed_state: false

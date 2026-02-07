@@ -1,0 +1,820 @@
+- id: 753c78a3967a492395a585cd3238000c
+  alias: Prism Mode set
+  triggers:
+  - entity_id:
+    - input_boolean.prism_solar_mode
+    - input_boolean.prism_pause_mode
+    - input_boolean.prism_normal_mode
+    - input_boolean.prism_night_mode
+    to: 'on'
+    trigger: state
+  actions:
+  - data_template:
+      entity_id: "{% set booleans = [\n  'input_boolean.prism_solar_mode',\n  'input_boolean.prism_pause_mode',\n
+        \ 'input_boolean.prism_normal_mode',\n  'input_boolean.prism_night_mode'\n]
+        | reject('equalto', trigger.entity_id) %} {{ booleans | list | join(', ')
+        }}\n"
+    action: input_boolean.turn_off
+- id: 1705e4e64c004d6ab5120d173865463f
+  alias: Prism Mode reduntant
+  triggers:
+  - entity_id:
+    - input_boolean.prism_solar_mode
+    - input_boolean.prism_pause_mode
+    - input_boolean.prism_normal_mode
+    - input_boolean.prism_night_mode
+    to: 'off'
+    trigger: state
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.prism_solar_mode
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.prism_pause_mode
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.prism_normal_mode
+      state: 'off'
+    - condition: state
+      entity_id: input_boolean.prism_night_mode
+      state: 'off'
+  actions:
+  - data:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.turn_on
+- id: 22813d1a2c184708bf534e28074a004f
+  alias: Set Wallbox Mode Solar
+  triggers:
+  - entity_id: input_boolean.prism_solar_mode
+    to: 'on'
+    trigger: state
+  actions:
+  - alias: 'MQTT publish: STOP RICARICA NOTTURNA'
+    data:
+      topic: prism/1/command/disable_night
+      retain: true
+    action: mqtt.publish
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - data:
+      topic: prism/1/command/set_mode
+      retain: true
+      payload: '1'
+    action: mqtt.publish
+    alias: 'MQTT: solar'
+  mode: single
+- id: 03dde8f5d16b46d8ad967d8e2a77c540
+  alias: Set Wallbox Mode Normal
+  triggers:
+  - entity_id: input_boolean.prism_normal_mode
+    to: 'on'
+    trigger: state
+  actions:
+  - alias: 'MQTT publish: STOP RICARICA NOTTURNA'
+    data:
+      topic: prism/1/command/disable_night
+      retain: true
+    action: mqtt.publish
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - data:
+      topic: prism/1/command/set_mode
+      retain: true
+      payload: '2'
+    action: mqtt.publish
+    alias: 'MQTT publish: NORMAL MODE'
+  mode: single
+- id: 12ca16d73699419286510272616d19df
+  alias: Set Wallbox Mode Pause
+  triggers:
+  - entity_id: input_boolean.prism_pause_mode
+    to: 'on'
+    trigger: state
+  actions:
+  - alias: 'MQTT publish: STOP RICARICA NOTTURNA'
+    data:
+      topic: prism/1/command/disable_night
+      retain: true
+    action: mqtt.publish
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - data:
+      topic: prism/1/command/set_mode
+      retain: true
+      payload: '3'
+    action: mqtt.publish
+    alias: 'MQTT publish: PASUSA RICARICA'
+  mode: single
+- id: 449e6e3a0ea94de4a08986544443c8a7
+  alias: Update Wallbox Mode Solar
+  description: ''
+  triggers:
+  - topic: prism/1/mode
+    payload: '1'
+    trigger: mqtt
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: input_boolean.prism_night_mode
+      state: 'off'
+    then:
+    - target:
+        entity_id: input_boolean.prism_solar_mode
+      action: input_boolean.turn_on
+  mode: single
+- id: 69e1a0d7d7c94ebbafee5a9fa92051ec
+  alias: Update Wallbox Mode Normal
+  description: ''
+  triggers:
+  - topic: prism/1/mode
+    payload: '2'
+    trigger: mqtt
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: input_boolean.prism_night_mode
+      state: 'off'
+    then:
+    - target:
+        entity_id: input_boolean.prism_normal_mode
+      action: input_boolean.turn_on
+      data: {}
+  mode: single
+- id: fc295cf885df4dc5b224081675ecb961
+  alias: Update Wallbox Mode Pause
+  description: ''
+  triggers:
+  - topic: prism/1/mode
+    payload: '3'
+    trigger: mqtt
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: input_boolean.prism_night_mode
+      state: 'off'
+    then:
+    - target:
+        entity_id: input_boolean.prism_pause_mode
+      action: input_boolean.turn_on
+    enabled: true
+  - target:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.turn_on
+    data: {}
+    enabled: false
+  mode: single
+- id: '1674673789916'
+  alias: Automazione Blocco carica a 90
+  description: mette in pausa la Prism quanto la % batteria raggiunge una soglia
+  triggers:
+  - entity_id: sensor.opel_corsa_batteria
+    trigger: state
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.opel_corsa_batteria
+    above: 90
+  - condition: state
+    entity_id: input_boolean.limit_charge_to_80
+    state: 'on'
+  - condition: state
+    entity_id: sensor.silla_prism_wallbox_prism_status
+    state: In carica
+  actions:
+  - data:
+      entity_id: input_text.memoria_modalita_wallbox
+      value: '{{ states(''sensor.silla_prism_wallbox_prism_mode'') }}'
+    action: input_text.set_value
+  - data: {}
+    target:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.toggle
+  mode: single
+- id: '1674916679437'
+  alias: Automazione rimozione limite 90
+  description: 'Rimozione del limite di ricarica a 80%: auto può ricaricarsi fino
+    al 100%'
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.limit_charge_to_80
+    from: 'on'
+    to: 'off'
+  condition:
+  - condition: template
+    value_template: '{{ states("sensor.prism_potenza")|int <= 100 }}'
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_text.memoria_modalita_wallbox
+        state: normal
+      sequence:
+      - service: input_boolean.toggle
+        data: {}
+        target:
+          entity_id: input_boolean.prism_normal_mode
+    - conditions:
+      - condition: state
+        entity_id: input_text.memoria_modalita_wallbox
+        state: solar
+      sequence:
+      - service: input_boolean.toggle
+        data: {}
+        target:
+          entity_id: input_boolean.prism_solar_mode
+    default:
+    - service: input_boolean.toggle
+      data: {}
+      target:
+        entity_id: input_boolean.prism_pause_mode
+  mode: single
+- id: '1694467620666'
+  alias: Riavvio Ricarica Normale
+  description: Semplicemente riavvia la modalità normale quando la ricarica è a zero
+    da più minuti e l'eccedenza della rete è >= 3kw
+  trigger:
+  - platform: time_pattern
+    minutes: /10
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_mode
+      state: Normale
+    - condition: or
+      conditions:
+      - condition: state
+        entity_id: sensor.silla_prism_wallbox_prism_status
+        state: In carica
+      - condition: state
+        entity_id: sensor.silla_prism_wallbox_prism_status
+        state: In attesa
+    - condition: numeric_state
+      entity_id: sensor.opel_corsa_batteria
+      below: 90
+    - condition: numeric_state
+      entity_id: sensor.prism_prelievo_rete
+      below: 3
+  - condition: numeric_state
+    entity_id: sensor.silla_prism_wallbox_prism_power
+    below: 0.1
+  action:
+  - service: input_boolean.toggle
+    data: {}
+    target:
+      entity_id: input_boolean.prism_pause_mode
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - service: input_boolean.toggle
+    data: {}
+    target:
+      entity_id: input_boolean.prism_normal_mode
+  mode: single
+- id: '1712995846232'
+  alias: notifica per State of Health accumulo
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.solaredge_battery1_state_of_health
+    below: 70
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - metadata: {}
+    data:
+      message: Lo State of Health della batteria LG resu prime è al 70% (circa 10kwh)
+      title: State of Health accumulo FV
+    action: notify.notify
+  mode: single
+- id: pubblica_sensori
+  alias: MQTT publish for monitor4FV
+  description: Pubblica ogni 2 secondi SOLO i dati aggiornati per il tablet
+  triggers:
+  - seconds: /2
+    trigger: time_pattern
+  actions:
+  - data:
+      topic: dataForMonitorFV
+      payload: "{\n \"solaredge_potenza_totale_dc\": \"{{ states('sensor.solaredge_potenza_totale_dc')}}\",\n
+        \"prism_sensore_rete\": \"{{ states('sensor.prism_imported_power_kw') }}\",\n
+        \"consumo_casa\": \"{{ states('sensor.consumo_casa') }}\",\n \"lg_carica_scarica_istantanea_kw\":\"{{
+        states('sensor.lg_carica_scarica_istantanea_kw') }}\",\n \"lg_percentuale_di_carica\":\"{{
+        states('sensor.lg_percentuale_di_carica') }}\",\n \"shelly_consumo_boiler\":\"{{
+        states('sensor.boiler_consumption') }}\",\n \"car_corsa_energy_level\":\"{{
+        states('sensor.opel_corsa_batteria') }}\",\n \"prism_plug_state\": \"{{states('sensor.silla_prism_wallbox_prism_status')
+        }}\",\n \"prism_potenza_di_carica\":\"{{ states('sensor.prism_power_kw') }}\",\n
+        \ \"car_corsa_last_update\": \"{{ states('sensor.last_update_opel_battery')
+        }}\",\n \"solar_panel_to_grid\":\"{{ states('sensor.solar_panel_to_grid_kw')
+        }}\",\n \"solar_panel_to_house\":\"{{ states('sensor.solar_panel_to_house_kw')
+        }}\",\n \"solar_panel_to_battery\":\"{{ states('sensor.solar_panel_to_battery_kw')
+        }}\",\n \"solar_grid_to_house\":\"{{ states('sensor.solar_grid_to_house_kw')
+        }}\"\n }"
+      qos: 0
+      retain: false
+    action: mqtt.publish
+- id: '1715196271396'
+  alias: Blocco ricarica solare quando l'accumulo è al limite (tardo pomeriggio sotto
+    il 50%)
+  description: ''
+  triggers:
+  - minutes: /10
+    trigger: time_pattern
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_status
+      state: In carica
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_mode
+      state: Solare
+    - condition: numeric_state
+      entity_id: sensor.lg_percentuale_di_carica
+      below: 50
+    - condition: time
+      after: '17:00:00'
+      before: 06:00:00
+  actions:
+  - data: {}
+    target:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.toggle
+  - data:
+      title: Ricarica solare terminata
+      message: Per preservare il l'energia dell'accumulo, la ricarica solare dell'auto
+        è stata interrotta
+    action: persistent_notification.create
+  mode: single
+- id: '1721051790807'
+  alias: Blocco ricarica quando l'accumulo è al limite (primo pomeriggio sotto il
+    30%)
+  description: Blocco ricarica quando l'accumulo è al limite (primo pomeriggio sotto
+    il 30%)
+  triggers:
+  - minutes: /10
+    trigger: time_pattern
+  conditions:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_status
+      state: In carica
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_mode
+      state: Solare
+    - condition: numeric_state
+      entity_id: sensor.lg_percentuale_di_carica
+      below: 30
+    - condition: time
+      after: '12:00:00'
+      before: '17:00:00'
+  actions:
+  - data: {}
+    target:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.toggle
+  - data:
+      title: Ricarica solare terminata
+      message: Per preservare il l'energia dell'accumulo, la ricarica solare dell'auto
+        è stata interrotta
+    action: persistent_notification.create
+  mode: single
+- id: '1722677598088'
+  alias: reset last_energy_delivered_wallbox
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.silla_prism_wallbox_prism_session_energy
+    to: '0'
+  condition: []
+  action:
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.last_energy_delivered_wallbox_number
+    data:
+      value: 0
+  mode: single
+- id: '1723116380221'
+  alias: notifica per impianto fotovoltaico offline
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.solaredge_dc_power
+    to: unavailable
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+  condition: []
+  action:
+  - action: persistent_notification.create
+    metadata: {}
+    data:
+      title: Impianto fotovoltaico spento oppure offline
+      message: Il dato della produzione non è disponibile da 3 minuti
+  mode: single
+- id: '1724408328745'
+  alias: update last_energy_delivered_wallbox
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.opel_corsa_batteria
+  condition:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_status
+      state: In carica
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_status
+      state: In attesa
+  action:
+  - target:
+      entity_id: input_number.last_energy_delivered_wallbox_number
+    data:
+      value: '{{ states(''sensor.prism_energia_erogata_ultima_sessione_kwh'') | float
+        }}'
+    action: input_number.set_value
+  mode: single
+- id: '1724409191985'
+  alias: update last_energy_delivered_wallbox quando si scollega
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.silla_prism_wallbox_prism_status
+    to: Scollegata
+  condition: []
+  action:
+  - target:
+      entity_id: input_number.last_energy_delivered_wallbox_number
+    data:
+      value: '{{ states(''sensor.prism_energia_erogata_ultima_sessione_kwh'') | float
+        }}'
+    action: input_number.set_value
+  mode: single
+- id: '1760000691412'
+  alias: Al riavvio di HA
+  description: ''
+  triggers:
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - delay:
+      hours: 0
+      minutes: 10
+      seconds: 0
+      milliseconds: 0
+  - if:
+    - condition: state
+      entity_id: select.solaredge_storage_control_mode
+      state: Remote Control
+    then:
+    - action: select.select_option
+      metadata: {}
+      data:
+        option: Remote Control
+      target:
+        entity_id: select.solaredge_storage_control_mode
+    - action: select.select_option
+      metadata: {}
+      data:
+        option: Maximize Self Consumption
+      target:
+        entity_id: select.solaredge_storage_control_mode
+    - action: persistent_notification.create
+      metadata: {}
+      data:
+        title: disattivata ricarica accumulo dalla rete
+        message: disattivata ricarica notturna dell accumulo dalla rete, perchè il
+          sistema si è riavviato e l automazione è stata interrotta
+    alias: Disattiva ricarica notturna accumulo per sicurezza
+  mode: single
+- id: '1760005141352'
+  alias: ' ON ricarica notturna accumulo in AC'
+  description: 'DALLA DOCUMENTAZIONE: https://github.com/WillCodeForCats/solaredge-modbus-multi/blob/main/doc/Power-Control-Open-Protocol-for-SolarEdge-Inverters.pdf
+
+
+    Storage Default Mode → modalità di default quando Storage Contro Mode è su "Remote
+    Control"
+
+
+    Remote Control Command Mode → imposti la modalità di funzionamento (es. Charge
+    from PV and AC) durante un intervallo di tempo.
+
+
+    Remote Control Command Timeout → imposti per quanto tempo questa modalità resta
+    attiva (il range possibile è 0-86400(24h))
+
+
+    Quando scade, il sistema torna automaticamente alla modalità definita in Storage
+    Charge/Discharge default Mode (tipicamente Maximize Self Consumption o Default).
+
+
+    Remote Control Charge Limit → imposti la potenza massima di carica.'
+  triggers:
+  - trigger: time
+    at: 01:30:00
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.lg_percentuale_di_carica
+    below: 45
+  - condition: numeric_state
+    entity_id: sensor.energy_production_today_stable
+    below: 20
+  - alias: auto non in carica
+    condition: template
+    value_template: '{% set stato = states(''sensor.silla_prism_wallbox_prism_status'')
+      %} {{ stato not in [''In carica'', ''Sconosciuto'', ''Unavailable''] }}
+
+      '
+  actions:
+  - action: select.select_option
+    metadata: {}
+    data:
+      option: Remote Control
+    target:
+      entity_id: select.solaredge_storage_control_mode
+    alias: Storage Control Mode = Remote Control
+  - alias: Storage Remote Command Timeout = 5 ore (dalle 1:30am alle 6:30am)
+    action: number.set_value
+    metadata: {}
+    data:
+      value: '18000'
+    target:
+      entity_id: number.solaredge_storage_remote_command_timeout
+  - if:
+    - condition: numeric_state
+      entity_id: sensor.energy_production_today_stable
+      below: 14
+    then:
+    - action: number.set_value
+      metadata: {}
+      data:
+        value: '3000'
+      target:
+        entity_id: number.solaredge_storage_remote_charge_limit
+      alias: Storage Remote Charge Limit = 3000 w
+    else:
+    - action: number.set_value
+      metadata: {}
+      data:
+        value: '2500'
+      target:
+        entity_id: number.solaredge_storage_remote_charge_limit
+      alias: Storage Remote Charge Limit = 2500 w
+  - action: select.select_option
+    metadata: {}
+    data:
+      option: Maximize self consumption
+    target:
+      entity_id: select.solaredge_storage_default_mode
+    alias: Storage Default Mode = Maximize self consumption
+  - action: select.select_option
+    metadata: {}
+    data:
+      option: Charge from PV and AC
+    target:
+      entity_id: select.solaredge_storage_remote_command_mode
+    alias: Remote Command More = Charge from PV and AC
+  - action: persistent_notification.create
+    metadata: {}
+    data:
+      title: attivata ricarica accumulo dalla rete
+      message: attivata ricarica notturna dell accumulo dalla rete, per usare la tariffa
+        più bassa. Verrà disattivata in automatico prima che faccia giorno
+  mode: single
+- id: '1760008746646'
+  alias: OFF ricarica notturna accumulo in AC
+  description: Non dovrebbe servire e in teoria non si attiva mai, ma per sicurezza
+    la mattina riporto Storage Remote Control a 'Maximize self consumption'
+  triggers:
+  - trigger: time
+    at: 06:45:00
+  conditions:
+  - condition: state
+    entity_id: select.solaredge_storage_control_mode
+    state: Remote Control
+  - condition: state
+    entity_id: select.solaredge_storage_default_mode
+    state: Charge from PV and AC
+  actions:
+  - action: select.select_option
+    metadata: {}
+    data:
+      option: Maximize Self Consumption
+    target:
+      entity_id: select.solaredge_storage_control_mode
+    alias: Storage Control Mode = Maximize Self Consumption
+  mode: single
+- id: '1760720409317'
+  alias: Set Wallbox Night
+  description: ''
+  triggers:
+  - entity_id: input_boolean.prism_night_mode
+    to: 'on'
+    trigger: state
+  actions:
+  - data:
+      topic: prism/1/command/enable_night
+      retain: true
+    action: mqtt.publish
+    alias: 'MQTT publish: AVVIO RICARICA NOTTURNA'
+  mode: single
+- id: '1761406985576'
+  alias: Riavvio Ricarica Solare
+  description: Semplicemente riavvia la modalità normale quando la ricarica è a zero
+    da più minuti e l eccedenza della rete è >= 3kw
+  triggers:
+  - minutes: /10
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: sensor.silla_prism_wallbox_prism_mode
+    state: solare
+  - condition: numeric_state
+    entity_id: sensor.silla_prism_wallbox_prism_power
+    below: 0.1
+  - condition: or
+    conditions:
+    - condition: and
+      conditions:
+      - condition: numeric_state
+        entity_id: sensor.lg_percentuale_di_carica
+        above: 35
+      - condition: numeric_state
+        entity_id: sensor.prism_prelievo_rete
+        below: 0.1
+    - alias: IF eccedenza_fv - consumo_casa > 3 kw
+      condition: template
+      value_template: '{{ states(''sensor.eccedenza_fotovotlaico'')|float(0) - states(''sensor.consumo_casa'')|float(0)
+        }}'
+  actions:
+  - data: {}
+    target:
+      entity_id: input_boolean.prism_pause_mode
+    action: input_boolean.toggle
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - data: {}
+    action: input_boolean.toggle
+    target:
+      entity_id: input_boolean.prism_solar_mode
+    alias: Toggle Modalita SOLARE
+  mode: single
+- id: '1767881565490'
+  alias: Start precondizionamento Opel with charge
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.toggle_opel_preconditioning
+    from:
+    - 'off'
+    to:
+    - 'on'
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: sensor.silla_prism_wallbox_prism_status
+      state:
+      - Scollegata
+    then:
+    - action: button.press
+      metadata: {}
+      target:
+        entity_id: button.opel_corsa_start_precondizionamento
+      data: {}
+    else:
+    - action: input_text.set_value
+      metadata: {}
+      target:
+        entity_id: input_text.prism_mode_memory
+      data:
+        sensor.silla_prism_wallbox_prism_mode:
+    - data: {}
+      target:
+        entity_id: input_boolean.prism_normal_mode
+      action: input_boolean.toggle
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 10
+        milliseconds: 0
+    - action: button.press
+      metadata: {}
+      target:
+        entity_id: button.opel_corsa_start_precondizionamento
+      data: {}
+    - delay:
+        hours: 0
+        minutes: 20
+        seconds: 0
+        milliseconds: 0
+    - alias: Set wallbox as before
+      choose:
+      - conditions:
+        - condition: state
+          entity_id: input_text.prism_mode_memory
+          state:
+          - Normale
+        sequence:
+        - data: {}
+          target:
+            entity_id: input_boolean.prism_normal_mode
+          action: input_boolean.toggle
+      - conditions:
+        - condition: state
+          entity_id: input_text.prism_mode_memory
+          state:
+          - Solare
+        sequence:
+        - data: {}
+          action: input_boolean.toggle
+          target:
+            entity_id: input_boolean.prism_solar_mode
+      - conditions:
+        - condition: state
+          entity_id: input_text.prism_mode_memory
+          state:
+          - Pausa
+        sequence:
+        - data: {}
+          action: input_boolean.toggle
+          target:
+            entity_id: input_boolean.prism_pause_mode
+      - conditions:
+        - condition: state
+          entity_id: input_text.prism_mode_memory
+          state:
+          - Notturna
+        sequence:
+        - data: {}
+          action: input_boolean.toggle
+          target:
+            entity_id: input_boolean.prism_night_mode
+  mode: single
+- id: '1767884343989'
+  alias: Stop precondizionamento Opel
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.toggle_opel_preconditioning
+    from:
+    - 'on'
+    - 'off'
+  conditions: []
+  actions:
+  - action: button.press
+    metadata: {}
+    data: {}
+    target:
+      entity_id: button.opel_corsa_stop_precondizionamento
+  mode: single
+- id: '1768055296300'
+  alias: Sveglia auto quando in carica
+  description: ''
+  triggers:
+  - minutes: /15
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: sensor.silla_prism_wallbox_prism_status
+    state:
+    - In carica
+  - condition: numeric_state
+    entity_id: sensor.ultimo_aggiornamento_auto_in_minuti
+    above: 30
+  actions:
+  - action: button.press
+    metadata: {}
+    target:
+      entity_id: button.opel_corsa_svegliati
+    data: {}
+  mode: single

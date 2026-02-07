@@ -1,0 +1,217 @@
+##################################################################################
+#          WALLBOX SILLA PRISM - PACKAGE                                         #
+##################################################################################
+
+mqtt:
+  sensor:
+    # - state_topic: "prism/hello"
+    #   name: "Prism Hello"
+    #   unique_id: prism_hello
+    #   device:
+    #     identifiers: silla_prism_wallbox
+    #     name: Silla Prism Wallbox
+    #     manufacturer: Silla
+    #     model: Prism
+
+    - state_topic: "prism/1/state"
+      name: "Prism Status"
+      unique_id: prism_status
+      value_template: >
+        {% set map = {
+          '1': 'Scollegata',
+          '2': 'In attesa',
+          '3': 'In carica',
+          '4': 'In pausa'
+        } %}
+        {{ map[value] if value in map else 'Error' }}
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/amp"
+      name: "Prism Current"
+      unique_id: prism_current
+      unit_of_measurement: "mA"
+      device_class: current
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/wh"
+      name: "Prism Session Energy"
+      unique_id: prism_session_energy
+      unit_of_measurement: "Wh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/pilot"
+      name: "Prism Pilot Current"
+      unique_id: prism_pilot_current
+      unit_of_measurement: "A"
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/user_amp"
+      name: "Prism User Current"
+      unique_id: prism_user_current
+      unit_of_measurement: "A"
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/volt"
+      name: "Prism Voltage"
+      unique_id: prism_voltage
+      unit_of_measurement: "V"
+      device_class: voltage
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/w"
+      name: "Prism Power"
+      unique_id: prism_power
+      unit_of_measurement: "W"
+      device_class: power
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/wh_total"
+      name: "Prism Total Energy"
+      unique_id: prism_total_energy
+      unit_of_measurement: "Wh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/session_time"
+      name: "Prism Session Duration"
+      unique_id: prism_session_duration
+      value_template: "{{ value | int | timestamp_custom('%H:%M:%S', 0) }}"
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/error"
+      name: "Prism Error"
+      unique_id: prism_error
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    - state_topic: "prism/1/mode"
+      name: "Prism Mode"
+      unique_id: prism_mode
+      value_template: >
+        {% set map = {
+          '1': 'Solare',
+          '2': 'Normale',
+          '3': 'Pausa',
+          '7': 'Autolimite'
+        } %}
+        {{ map[value] if value in map else 'Error' }}
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+    # - state_topic: "prism/1/input/touch"
+    #   name: "Prism Touch"
+    #   unique_id: prism_touch
+    #   expire_after: 10
+    #   device:
+    #     identifiers: silla_prism_wallbox
+    #     name: Silla Prism Wallbox
+    #     manufacturer: Silla
+    #     model: Prism
+
+    - state_topic: "prism/energy_data/power_grid"
+      name: "Prism Imported Power"
+      unique_id: prism_imported_power
+      unit_of_measurement: "W"
+      expire_after: 25
+      device:
+        identifiers: silla_prism_wallbox
+        name: Silla Prism Wallbox
+        manufacturer: Silla
+        model: Prism
+
+input_boolean:
+  prism_solar_mode:
+    name: Solar Mode
+    icon: mdi:solar-panel
+
+  prism_pause_mode:
+    name: Pause Mode
+    icon: mdi:pause-circle
+
+  prism_normal_mode:
+    name: Normal Mode
+    icon: mdi:brightness-auto
+
+  limit_charge_to_80:
+    name: Charge Limit 80%
+    icon: mdi:battery-80
+
+template:
+  - sensor:
+      - name: "Prism Power kW"
+        unique_id: prism_power_kw
+        unit_of_measurement: "kW"
+        state: "{{ (states('sensor.silla_prism_wallbox_prism_power') | float / 1000) | round(2) }}"
+
+      - name: "Prism Session Energy kWh"
+        unique_id: prism_session_energy_kwh
+        unit_of_measurement: "kWh"
+        state: "{{ (states('sensor.silla_prism_wallbox_prism_session_energy') | float / 1000) | round(2) }}"
+
+      - name: "Prism Imported Power kW"
+        unique_id: prism_imported_power_kw
+        unit_of_measurement: "kW"
+        state: "{{ (states('sensor.silla_prism_wallbox_prism_imported_power') | float / 1000) | round(2) }}"
+
+      - name: "Prelievo rete"
+        unique_id: prelievo_rete
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set v = states('sensor.prism_imported_power_kw') | float(0) %}
+          {{ v if v > 0 else 0 }}
+
+      - name: "Immissione rete"
+        unique_id: immissione_rete
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set v = states('sensor.prism_imported_power_kw') | float(0) %}
+          {{ -v if v < 0 else 0 }}

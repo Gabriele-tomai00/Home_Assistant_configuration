@@ -1,0 +1,41 @@
+# Example configuration.yaml entry
+api:
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+recorder:
+  purge_keep_days: 30 # per la cronologia dei sensori
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+# sensor: !include_dir_merge_list sensors/
+# sensor: !include sensors.yaml
+
+# ===========================
+# Home Assistant core setup
+# ===========================
+homeassistant:
+  customize: !include customizations.yaml
+  # Nel packages sono inclusi ENERGY - PRISM CAR - CORSA
+  packages: !include_dir_named packages
+
+  allowlist_external_dirs:
+    - "/config/www"
+
+# ===========================
+# Accesso remoto (DuckDNS, proxy)
+# ===========================
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.1.26
