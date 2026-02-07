@@ -4,3 +4,13 @@ secrets.yaml
 *.log
 backups/
 tts/
+/.HA_VERSION
+/.cloud
+/.storage
+/@eaDir
+/blueprints
+/backups
+/custom_components
+/tts
+/themes
+custom_components/
