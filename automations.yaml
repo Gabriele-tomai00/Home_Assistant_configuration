@@ -313,8 +313,8 @@
   - data:
       topic: dataForMonitorFV
       payload: "{\n \"solaredge_potenza_totale_dc\": \"{{ states('sensor.solaredge_potenza_totale_dc')}}\",\n
-        \"prism_sensore_rete\": \"{{ states('sensor.prism_imported_power_kw') }}\",\n
-        \"consumo_casa\": \"{{ states('sensor.consumo_casa') }}\",\n \"lg_carica_scarica_istantanea_kw\":\"{{
+        \"prism_sensore_rete\": \"{{ states('sensor.imported_power') }}\",\n \"consumo_casa\":
+        \"{{ states('sensor.consumo_casa') }}\",\n \"lg_carica_scarica_istantanea_kw\":\"{{
         states('sensor.lg_carica_scarica_istantanea_kw') }}\",\n \"lg_percentuale_di_carica\":\"{{
         states('sensor.lg_percentuale_di_carica') }}\",\n \"shelly_consumo_boiler\":\"{{
         states('sensor.boiler_consumption') }}\",\n \"car_corsa_energy_level\":\"{{

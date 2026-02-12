@@ -1,5 +1,21 @@
 template:
   - sensor:
+
+      #################################################
+      #######       GENERAL                      ######
+      #################################################
+
+      - name: "imported power"
+        unique_id: imported_power
+        unit_of_measurement: kW
+        state: >-
+          {{ 
+            (states('sensor.prism_imported_power_kw') | float(
+                states('sensor.solaredge_sensore_rete') | float(0)
+            )) | round(2)
+          }}
+          
+      #################################################
       - name: "Solar Selfconsumption Ratio"
         unique_id: solar_selfconsumption_ratio
         icon: mdi:percent-outline
@@ -288,7 +304,10 @@ template:
         unique_id: consumo_casa
         unit_of_measurement: kW
         state: >-
-          {% set consumo_c = ((((states('sensor.solaredge_ac_power')|float)/1000) + (states('sensor.prism_imported_power_kw')|float))|round(2)) %}
+          {% set consumo_c = (
+              (states('sensor.solaredge_ac_power') | float(0) / 1000)
+              + (states('sensor.prism_imported_power_kw') | float(0))
+            ) | round(2) %}
           {% if consumo_c <= 0 %}
             0
           {% else %}
@@ -298,7 +317,7 @@ template:
       - name: "consumo_casa_no_auto"
         unique_id: consumo_casa_no_auto
         unit_of_measurement: kW
-        state: "{{ ((states('sensor.consumo_casa')|float - states('sensor.prism_potenza_di_carica')|float)|float(2))|round(2) }}"
+        state: "{{ ((states('sensor.consumo_casa')|float - states('sensor.prism_power_kw')|float)|float(2))|round(2) }}"
 
       - name: "eccedenza_fotovotlaico"
         unique_id: eccedenza_fotovotlaico
@@ -421,9 +440,15 @@ template:
 
       - name: "generation_fv_to_house"
         unique_id: generation_fv_to_house
-        # friendly_name: "autoconusmo senza accumulo"
         unit_of_measurement: kW
-        state: "{{ (states('sensor.solaredge_potenza_totale_dc')|float - states('sensor.immissione_rete')|float|round(2) -  states('sensor.lg_carica_istantanea_kw')|float)|round(2) }}"
+        state: >-
+          {{
+            (
+              states('sensor.solaredge_potenza_totale_dc')|float(0)
+              - states('sensor.immissione_rete')|float(0)
+              - states('sensor.lg_carica_istantanea_kw')|float(0)
+            ) | round(2)
+          }}
 
 sensor:
   - platform: integration
