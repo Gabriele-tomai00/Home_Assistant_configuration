@@ -22,3 +22,7 @@ home-assistant.log*
 /image
 /esphome
 .ha_run.lock
+/sensors
+climates.yaml
+scenes.yaml
+scripts.yaml
